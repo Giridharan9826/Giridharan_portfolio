@@ -39,7 +39,10 @@ const server = http.createServer((req, res) => {
       const indexPath = path.join(PUBLIC_DIR, 'index.html');
       fs.readFile(indexPath, (errIndex, dataIndex) => {
         if (!errIndex) {
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+          res.writeHead(200, {
+            'Content-Type': 'text/html; charset=UTF-8',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+          });
           res.end(dataIndex);
         } else {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
@@ -54,7 +57,8 @@ const server = http.createServer((req, res) => {
 
     res.writeHead(200, {
       'Content-Type': contentType,
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
     });
 
     fs.createReadStream(filePath).pipe(res);

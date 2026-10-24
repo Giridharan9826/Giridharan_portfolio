@@ -35,7 +35,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Sacramento&text=hello&display=block" rel="stylesheet">
 
 <style>
 :root {
@@ -140,41 +139,6 @@ h1, h2, h3, h4 { font-family: var(--sans); font-weight: 700; line-height: 1.1; }
   letter-spacing: .42em;
   text-transform: uppercase;
   color: var(--mut);
-}
-
-/* Hello cursive intro */
-#hello {
-  position: fixed;
-  inset: 0;
-  z-index: 950;
-  background: var(--bg);
-  display: grid;
-  place-items: center;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity .9s var(--ease), transform 1.1s var(--ease), visibility .9s;
-}
-#hello.show {
-  opacity: 1;
-  visibility: visible;
-}
-#hello.out {
-  transform: scale(1.06);
-  opacity: 0;
-  visibility: hidden;
-}
-#hello span {
-  font: 400 clamp(100px, 24vw, 280px)/1.25 'Sacramento', cursive;
-  color: #111;
-  padding: .08em .25em;
-  clip-path: inset(0 100% 0 0);
-}
-#hello.show span {
-  animation: write 2.6s cubic-bezier(.55, .1, .3, 1) .3s forwards;
-}
-@keyframes write {
-  to { clip-path: inset(0 0 0 0); }
 }
 
 /* Floating Sticky Navigation (appears on scroll) */
@@ -563,6 +527,7 @@ section.s {
   max-width: 1200px;
   margin: auto;
   padding: clamp(70px, 9vw, 130px) clamp(20px, 5vw, 56px);
+  scroll-margin-top: 85px;
 }
 .head {
   margin-bottom: clamp(36px, 5vw, 64px);
@@ -720,64 +685,357 @@ section.s {
   transform: scaleX(var(--lv));
 }
 
-/* Projects Responsive Grid (No horizontal slide / scroll-trap) */
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 28px;
-  align-items: stretch;
-  padding: 8px 0 24px;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+/* =====================================================================
+   FEATURED PROJECTS 3D SLIDER (CENTER-STAGE INFINITE CAROUSEL)
+   ===================================================================== */
+#projects.s {
+  padding-top: clamp(48px, 6vw, 76px);
+  padding-bottom: clamp(56px, 7vw, 90px);
 }
-.pcard {
+.projects-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(24px, 3.5vw, 40px);
+}
+.projects-head-row .head-left {
+  flex: 1;
+  min-width: 260px;
+}
+.slider-controls-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 4px;
+}
+.slider-counter {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tx);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--bg2);
   border: 1.5px solid var(--line);
-  border-radius: 20px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+.slide-num.current {
+  color: var(--gold);
+  min-width: 20px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.slide-num-sep {
+  color: var(--mut);
+  opacity: 0.45;
+}
+.slide-num.total {
+  color: var(--mut);
+  font-variant-numeric: tabular-nums;
+}
+.slider-nav-btns {
+  display: flex;
+  gap: 10px;
+}
+.slider-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--tx);
+  background: var(--bg2);
+  color: var(--tx);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.slider-btn:hover {
+  background: var(--tx);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+}
+.slider-btn:active {
+  transform: translateY(0) scale(0.93);
+}
+
+/* Slider Track & Container */
+.projects-slider-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 24px 0 28px;
+  box-sizing: border-box;
+  touch-action: pan-y;
+  cursor: grab;
+  perspective: 1200px;
+  perspective-origin: center center;
+}
+.projects-slider-container.is-dragging {
+  cursor: grabbing !important;
+  user-select: none;
+}
+.projects-slider-track {
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  gap: clamp(16px, 2.5vw, 32px);
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  align-items: center;
+  transform-style: preserve-3d;
+}
+.projects-slider-container.is-dragging .projects-slider-track {
+  transition: none !important;
+}
+
+/* Edge Curtains (Soft luxury vignette fade) */
+.slider-edge-curtain {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(24px, 6vw, 90px);
+  z-index: 8;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.slider-edge-curtain.left {
+  left: 0;
+  background: linear-gradient(90deg, var(--bg) 0%, rgba(244, 242, 238, 0) 100%);
+}
+.slider-edge-curtain.right {
+  right: 0;
+  background: linear-gradient(270deg, var(--bg) 0%, rgba(244, 242, 238, 0) 100%);
+}
+
+/* Floating Side Navigation Arrows on Slider Viewport */
+.slider-side-arrow {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(10, 10, 12, 0.16);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--tx);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  opacity: 0.85;
+}
+.slider-side-arrow:hover {
+  background: var(--tx);
+  color: #FFFFFF;
+  border-color: var(--tx);
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  opacity: 1;
+}
+.slider-side-arrow:active {
+  transform: translateY(-50%) scale(0.95);
+}
+.slider-side-arrow.prev {
+  left: 14px;
+}
+.slider-side-arrow.next {
+  right: 14px;
+}
+
+/* Individual Project Card inside the Slider (3D Stage Depth) */
+.pcard {
+  flex: 0 0 clamp(320px, 45vw, 540px);
+  max-width: 86vw;
+  border: 1.5px solid var(--line);
+  border-radius: 22px;
   background: var(--bg2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: border-color .3s, transform .3s, box-shadow .3s;
-  width: 100%;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s ease,
+              filter 0.65s ease;
   box-sizing: border-box;
+  opacity: 0.35;
+  transform: scale(0.88) translateZ(-45px);
+  filter: blur(0.3px) grayscale(25%);
+  cursor: pointer;
+  user-select: none;
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
-.pcard:hover {
-  border-color: #0A0A0C;
-  transform: translateY(-6px);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.08);
+.pcard.card-prev {
+  opacity: 0.55;
+  transform: scale(0.92) translateZ(-25px) rotateY(6deg);
+  filter: grayscale(12%);
 }
+.pcard.card-next {
+  opacity: 0.55;
+  transform: scale(0.92) translateZ(-25px) rotateY(-6deg);
+  filter: grayscale(12%);
+}
+.pcard.card-prev:hover,
+.pcard.card-next:hover {
+  opacity: 0.82;
+  transform: scale(0.94) translateZ(-10px) rotateY(0deg);
+  filter: none;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+.pcard.active-slide {
+  opacity: 1;
+  transform: scale(1.02) translateZ(0) rotateY(0deg);
+  filter: none;
+  border-color: rgba(200, 162, 86, 0.65);
+  box-shadow: 0 22px 60px -10px rgba(10, 10, 12, 0.16), 0 0 0 1px rgba(200, 162, 86, 0.3);
+  cursor: default;
+  z-index: 5;
+}
+.pcard.active-slide:hover {
+  box-shadow: 0 28px 70px -10px rgba(10, 10, 12, 0.22), 0 0 0 1.5px rgba(200, 162, 86, 0.55);
+}
+
+/* Card Image Area */
 .pimg {
   position: relative;
-  aspect-ratio: 16/10;
+  aspect-ratio: 16 / 9.2;
   overflow: hidden;
-  background: #E0DED9;
+  background: #111015;
+  border-bottom: 1px solid var(--line);
 }
-.pbadge {
+.pimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.pcard.active-slide:hover .pimg img {
+  transform: scale(1.06);
+}
+.p-index-badge {
   position: absolute;
-  top: 14px;
-  right: 14px;
+  top: 12px;
+  left: 12px;
   background: rgba(10, 10, 12, 0.88);
-  color: #F4F2EE;
+  color: #FFFFFF;
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.p-index-badge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+.pbadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(10, 10, 12, 0.88);
+  color: #F4F2EE;
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2;
+}
+
+/* Card Body Area */
+.pbody {
+  padding: clamp(14px, 2.2vw, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.pbody h3 {
+  font-size: clamp(18px, 1.9vw, 21px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin: 0;
+}
+.pbody p {
+  margin: 0;
+  color: var(--mut);
+  font-size: 13.5px;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.tags li {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--tx);
+  border: 1px solid var(--line);
+  background: #F4F2EE;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.acts {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.acts .btn {
+  padding: 8px 16px;
+  font-size: 10.5px;
 }
 .p-copyright {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 10px;
-  letter-spacing: .12em;
+  font-size: 9.5px;
+  letter-spacing: .1em;
   text-transform: uppercase;
   color: var(--mut);
-  padding-top: 14px;
-  margin-top: 4px;
+  padding-top: 8px;
+  margin-top: 2px;
   border-top: 1px dashed var(--line);
   font-weight: 600;
 }
@@ -789,69 +1047,118 @@ section.s {
 }
 .p-copyright .p-rights::before {
   content: "";
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--gold);
   display: inline-block;
 }
 .p-copyright-notice {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--mut);
-  margin-top: 10px;
+  margin-top: 8px;
   max-width: 62ch;
-  line-height: 1.6;
+  line-height: 1.5;
 }
-.pimg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 1s var(--ease);
-}
-.pcard:hover .pimg img {
-  transform: scale(1.05);
-}
-.pbody {
-  padding: 26px;
+
+/* Bottom Controls: Progress & Interactive Pills */
+.slider-bottom-bar {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  flex: 1;
+  gap: 12px;
+  align-items: center;
 }
-.pbody h3 {
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.slider-progress-wrap {
+  width: 100%;
+  max-width: 420px;
+  height: 4px;
+  background: rgba(13, 12, 16, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
 }
-.pbody p {
-  margin: 0;
-  color: var(--mut);
-  font-size: 15px;
-  line-height: 1.6;
+.slider-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--tx) 100%);
+  border-radius: 999px;
+  transition: width 0.1s linear;
 }
-.tags {
+.slider-pagination {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  list-style: none;
+  align-items: center;
 }
-.tags li {
+.slider-dot {
+  min-width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(13, 12, 16, 0.2);
+  border: none;
+  padding: 0 6px;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.2, 1, 0.3, 1);
+  font-size: 10px;
+  font-weight: 700;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slider-dot:hover {
+  background: rgba(13, 12, 16, 0.5);
+  transform: scale(1.15);
+}
+.slider-dot.active {
+  min-width: 36px;
+  background: var(--tx);
+  color: #FFFFFF;
+  padding: 0 8px;
+  height: 18px;
+}
+.slider-status-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 11px;
-  letter-spacing: .12em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--tx);
-  border: 1px solid var(--line);
-  background: #F4F2EE;
-  padding: 4px 10px;
-  border-radius: 6px;
+  color: var(--mut);
   font-weight: 600;
 }
-.acts {
-  display: flex;
-  gap: 10px;
-  margin-top: auto;
-  padding-top: 10px;
+.slider-play-toggle {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--tx);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
 }
+.slider-play-toggle:hover {
+  border-color: var(--tx);
+  background: var(--tx);
+  color: #FFFFFF;
+}
+.slider-status-hint .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  display: inline-block;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.8); }
+}
+
 .btn {
   display: inline-block;
   font-size: 11px;
@@ -1135,9 +1442,12 @@ html.cm #cd, html.cm #cr { opacity: 1; }
   .nav-toggle {
     display: block;
   }
-  .projects-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+  .pcard {
+    flex: 0 0 clamp(290px, 68vw, 440px);
+    max-width: 86vw;
+  }
+  .slider-side-arrow {
+    display: none !important;
   }
   .about-grid, .res, .con {
     grid-template-columns: 1fr;
@@ -1163,18 +1473,38 @@ html.cm #cd, html.cm #cr { opacity: 1; }
     height: 78vh;
     border-radius: 20px;
   }
-  .projects-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  .projects-head-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .slider-controls-top {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .pcard {
+    flex: 0 0 clamp(260px, 82vw, 350px);
+    max-width: 88vw;
+    border-radius: 18px;
+  }
+  .pbody {
+    padding: 13px 15px;
+    gap: 8px;
+  }
+  .pbody h3 {
+    font-size: 17.5px;
+  }
+  .pbody p {
+    font-size: 12.5px;
+  }
+  .slider-side-arrow {
+    display: none !important;
   }
   section.s {
-    padding: 60px 18px;
+    padding: 50px 16px;
   }
   .head h2 {
     font-size: clamp(30px, 8vw, 42px);
-  }
-  .pbody {
-    padding: 20px;
   }
 }
 </style>
@@ -1193,9 +1523,6 @@ html.cm #cd, html.cm #cr { opacity: 1; }
   </div>
   <p>M. Giridharan</p>
 </div>
-
-<!-- Handwritten "hello" intro -->
-<div id="hello" aria-hidden="true"><span>hello</span></div>
 
 <!-- Floating Navigation Bar on Scroll -->
 <nav id="floatingNav" aria-label="Quick Navigation">
@@ -1321,12 +1648,65 @@ html.cm #cd, html.cm #cr { opacity: 1; }
 
   <!-- PROJECTS SECTION -->
   <section class="s" id="projects" aria-label="Selected Projects">
-    <div class="head rv">
-      <p class="eyebrow">Selected Work</p>
-      <h2>Featured Projects</h2>
-      <p class="p-copyright-notice">© <span class="c-yr">2026</span> M. Giridharan. All original ML architectures, codebases, and systems are reserved under copyright.</p>
+    <div class="head rv projects-head-row">
+      <div class="head-left">
+        <p class="eyebrow">Selected Work</p>
+        <h2>Featured Projects</h2>
+        <p class="p-copyright-notice">© <span class="c-yr">2026</span> M. Giridharan. All original ML architectures, codebases, and systems are reserved under copyright.</p>
+      </div>
+      <div class="slider-controls-top" aria-label="Project slider controls">
+        <div class="slider-counter">
+          <span class="slide-num current" id="slideCurrent">01</span>
+          <span class="slide-num-sep">/</span>
+          <span class="slide-num total" id="slideTotal">07</span>
+        </div>
+        <div class="slider-nav-btns">
+          <button type="button" class="slider-btn prev" id="projPrev" aria-label="Previous project" title="Previous project">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <button type="button" class="slider-btn next" id="projNext" aria-label="Next project" title="Next project">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="projects-grid rv" id="projectsGrid" aria-label="Featured Projects Grid"></div>
+
+    <!-- Interactive Carousel Slider -->
+    <div class="projects-slider-container rv" id="projectsSliderContainer">
+      <div class="slider-edge-curtain left" aria-hidden="true"></div>
+
+      <button type="button" class="slider-side-arrow prev" id="sidePrev" aria-label="Previous project" title="Previous project">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+
+      <div class="projects-slider-track" id="projectsTrack" role="region" aria-label="Projects slider" tabindex="0">
+        <!-- Rendered by JS -->
+      </div>
+
+      <button type="button" class="slider-side-arrow next" id="sideNext" aria-label="Next project" title="Next project">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <div class="slider-edge-curtain right" aria-hidden="true"></div>
+    </div>
+
+    <!-- Bottom Controls: Progress Bar & Pagination Pills -->
+    <div class="slider-bottom-bar rv">
+      <div class="slider-progress-wrap" title="Auto-slide progress timer">
+        <div class="slider-progress-fill" id="slideProgressFill"></div>
+      </div>
+      <div class="slider-pagination" id="sliderPagination" role="tablist" aria-label="Project Slide Pagination">
+        <!-- Dots rendered by JS -->
+      </div>
+      <div class="slider-status-hint">
+        <button type="button" class="slider-play-toggle" id="sliderPlayToggle" aria-label="Toggle auto-slide" title="Pause / Play auto-slide">
+          <svg class="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          <svg class="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="display:none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+        <span class="status-dot"></span>
+        <span id="sliderStatusText">Auto-sliding · Hover or drag to pause</span>
+      </div>
+    </div>
   </section>
 
   <!-- RESUME SECTION -->
@@ -1496,13 +1876,17 @@ const root = document.documentElement;
 
 $('#yr').textContent = new Date().getFullYear();
 
-/* Cinematic Loader */
+/* Preloader (Fast entrance, no hello overlay) */
 (function() {
   root.classList.add('lock');
   const arc = $('#arc');
   const pct = $('#pct');
+  if (!arc || !pct) {
+    root.classList.remove('lock');
+    return;
+  }
   const C = 339.3;
-  const D = matchMedia('(prefers-reduced-motion:reduce)').matches ? 200 : 2200;
+  const D = matchMedia('(prefers-reduced-motion:reduce)').matches ? 200 : 850;
   let t0;
 
   const ease = x => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
@@ -1518,29 +1902,10 @@ $('#yr').textContent = new Date().getFullYear();
       requestAnimationFrame(tick);
     } else {
       setTimeout(() => {
-        $('#loader').classList.add('done');
-        const go = () => {
-          root.classList.remove('lock');
-        };
-
-        if (matchMedia('(prefers-reduced-motion:reduce)').matches) {
-          go();
-          return;
-        }
-
-        const h = $('#hello');
-        (document.fonts ? Promise.race([
-          document.fonts.load('100px Sacramento', 'hello'),
-          new Promise(r => setTimeout(r, 1200))
-        ]) : Promise.resolve()).then(() => {
-          h.classList.add('show');
-          setTimeout(() => {
-            h.classList.remove('show');
-            h.classList.add('out');
-            go();
-          }, 2800);
-        });
-      }, 250);
+        const loader = $('#loader');
+        if (loader) loader.classList.add('done');
+        root.classList.remove('lock');
+      }, 150);
     }
   }
   requestAnimationFrame(tick);
@@ -1585,12 +1950,49 @@ $('#skillGrid').innerHTML = CONFIG.skills.map(([n, l], i) => `
   </div>
 `).join('');
 
-/* Populate Projects Responsive Grid */
-const pContainer = $('#projectsGrid') || $('#track');
+/* =====================================================================
+   FEATURED PROJECTS 3D SLIDER (CENTER-STAGE CAROUSEL ENGINE)
+   ===================================================================== */
+const pContainer = $('#projectsTrack') || $('#projectsGrid');
+const sliderContainer = $('#projectsSliderContainer');
+const slideCurrentEl = $('#slideCurrent');
+const slideTotalEl = $('#slideTotal');
+const projPrevBtn = $('#projPrev');
+const projNextBtn = $('#projNext');
+const sidePrevBtn = $('#sidePrev');
+const sideNextBtn = $('#sideNext');
+const paginationEl = $('#sliderPagination');
+const progressFillEl = $('#slideProgressFill');
+const statusTextEl = $('#sliderStatusText');
+const playToggleBtn = $('#sliderPlayToggle');
+
+const totalReal = CONFIG.projects.length; // 7
+const CLONE_COUNT = 3;
+let trackIndex = CLONE_COUNT; // Starting at Real 0
+let isAnimating = false;
+let progressAnimationId = null;
+let isPaused = false;
+let userManuallyPaused = false;
+const SLIDE_DURATION = 4600; // 4.6 seconds auto-slide
+let progressStartTime = 0;
+let progressElapsed = 0;
+
+if (slideTotalEl) {
+  slideTotalEl.textContent = String(totalReal).padStart(2, '0');
+}
+
+// Build cards dataset with 3 clones before and 3 clones after for continuous infinite sliding
+const allSlidesData = [
+  ...CONFIG.projects.slice(-CLONE_COUNT).map((p, idx) => ({ ...p, isClone: true, realIndex: totalReal - CLONE_COUNT + idx })),
+  ...CONFIG.projects.map((p, idx) => ({ ...p, isClone: false, realIndex: idx })),
+  ...CONFIG.projects.slice(0, CLONE_COUNT).map((p, idx) => ({ ...p, isClone: true, realIndex: idx }))
+];
+
 if (pContainer) {
-  pContainer.innerHTML = CONFIG.projects.map((p, i) => `
-    <article class="pcard" style="--i:${i}">
+  pContainer.innerHTML = allSlidesData.map((p, i) => `
+    <article class="pcard" data-track-index="${i}" data-real-index="${p.realIndex}">
       <div class="pimg">
+        <span class="p-index-badge">0${p.realIndex + 1} / 0${totalReal}</span>
         <img src="${p.image}" alt="${p.title} preview" loading="lazy">
         ${p.badge ? `<span class="pbadge">${p.badge}</span>` : ''}
       </div>
@@ -1599,8 +2001,8 @@ if (pContainer) {
         <p>${p.desc}</p>
         <ul class="tags">${p.tech.map(t => `<li>${t}</li>`).join('')}</ul>
         <div class="acts">
-          <a class="btn" href="${p.github}" target="_blank" rel="noopener">GitHub</a>
-          ${p.demo ? `<a class="btn gold" href="${p.demo}" target="_blank" rel="noopener">Live Demo</a>` : ''}
+          <a class="btn" href="${p.github}" target="_blank" rel="noopener">GitHub ↗</a>
+          ${p.demo ? `<a class="btn gold" href="${p.demo}" target="_blank" rel="noopener">Live Demo ↗</a>` : ''}
         </div>
         <div class="p-copyright">
           <span>© <span class="c-yr">2026</span> M. Giridharan</span>
@@ -1610,6 +2012,335 @@ if (pContainer) {
     </article>
   `).join('');
 }
+
+// Populate Pagination Indicators with Numbering (only for the 7 real projects)
+if (paginationEl) {
+  paginationEl.innerHTML = CONFIG.projects.map((_, i) => `
+    <button type="button" class="slider-dot ${i === 0 ? 'active' : ''}" data-real-index="${i}" aria-label="Go to project ${i + 1}">
+      ${i + 1}
+    </button>
+  `).join('');
+
+  paginationEl.addEventListener('click', e => {
+    const dot = e.target.closest('.slider-dot');
+    if (dot) {
+      const targetReal = parseInt(dot.getAttribute('data-real-index'), 10);
+      const currentReal = (trackIndex - CLONE_COUNT + totalReal) % totalReal;
+      let diff = targetReal - currentReal;
+      if (diff > totalReal / 2) diff -= totalReal;
+      if (diff < -totalReal / 2) diff += totalReal;
+      goToSlide(trackIndex + diff);
+    }
+  });
+}
+
+// Calculate Exact Center Offset for any card index
+function getTargetOffset(index) {
+  if (!pContainer || !sliderContainer) return 0;
+  const cards = pContainer.querySelectorAll('.pcard');
+  if (!cards.length) return 0;
+  const targetCard = cards[index];
+  if (!targetCard) return 0;
+  const containerWidth = sliderContainer.offsetWidth;
+  const cardWidth = targetCard.offsetWidth;
+  const cardLeft = targetCard.offsetLeft;
+  // Center active card with symmetric peek
+  return cardLeft - (containerWidth - cardWidth) / 2;
+}
+
+// Update 3D card classes & track translation
+function updateTrackPosition(animate = true) {
+  if (!pContainer) return;
+  const cards = pContainer.querySelectorAll('.pcard');
+  if (!cards.length) return;
+
+  const targetOffset = getTargetOffset(trackIndex);
+  pContainer.style.transition = animate ? 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+  pContainer.style.transform = `translate3d(-${targetOffset}px, 0, 0)`;
+
+  // Update 3D depth, perspective tilt & focus
+  cards.forEach((c, idx) => {
+    c.classList.remove('active-slide', 'card-prev', 'card-next', 'card-far');
+    if (idx === trackIndex) {
+      c.classList.add('active-slide');
+    } else if (idx === trackIndex - 1) {
+      c.classList.add('card-prev');
+    } else if (idx === trackIndex + 1) {
+      c.classList.add('card-next');
+    } else {
+      c.classList.add('card-far');
+    }
+  });
+
+  // Calculate matching real project index
+  const realIdx = (trackIndex - CLONE_COUNT + totalReal) % totalReal;
+
+  // Update top counter
+  if (slideCurrentEl) {
+    slideCurrentEl.textContent = String(realIdx + 1).padStart(2, '0');
+  }
+
+  // Update pagination dots
+  if (paginationEl) {
+    const dots = paginationEl.querySelectorAll('.slider-dot');
+    dots.forEach((d, i) => d.classList.toggle('active', i === realIdx));
+  }
+}
+
+// Handle seamless infinite loop jump when transition finishes
+if (pContainer) {
+  pContainer.addEventListener('transitionend', e => {
+    if (e.target !== pContainer || e.propertyName !== 'transform') return;
+    isAnimating = false;
+
+    // Slid past the end into right clones -> snap to corresponding real card
+    if (trackIndex >= CLONE_COUNT + totalReal) {
+      trackIndex = trackIndex - totalReal;
+      updateTrackPosition(false);
+    }
+    // Slid before the start into left clones -> snap to corresponding real card
+    else if (trackIndex < CLONE_COUNT) {
+      trackIndex = trackIndex + totalReal;
+      updateTrackPosition(false);
+    }
+  });
+}
+
+function goToSlide(index) {
+  trackIndex = index;
+  isAnimating = true;
+  updateTrackPosition(true);
+  resetProgressTimer();
+}
+
+function nextSlide() {
+  goToSlide(trackIndex + 1);
+}
+
+function prevSlide() {
+  goToSlide(trackIndex - 1);
+}
+
+// Arrow Button Listeners (Top + Floating Side Arrows)
+[projPrevBtn, sidePrevBtn].forEach(btn => {
+  if (btn) btn.addEventListener('click', e => { e.stopPropagation(); prevSlide(); });
+});
+[projNextBtn, sideNextBtn].forEach(btn => {
+  if (btn) btn.addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
+});
+
+// Clicking an inactive card smoothly slides it to center
+if (pContainer) {
+  pContainer.addEventListener('click', e => {
+    const card = e.target.closest('.pcard');
+    if (card && !e.target.closest('a, button')) {
+      const idx = parseInt(card.getAttribute('data-track-index'), 10);
+      if (idx !== trackIndex) {
+        goToSlide(idx);
+      }
+    }
+  });
+}
+
+// Play / Pause Toggle
+if (playToggleBtn) {
+  const pauseIcon = playToggleBtn.querySelector('.icon-pause');
+  const playIcon = playToggleBtn.querySelector('.icon-play');
+
+  playToggleBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    userManuallyPaused = !userManuallyPaused;
+    isPaused = userManuallyPaused;
+    if (pauseIcon && playIcon) {
+      pauseIcon.style.display = userManuallyPaused ? 'none' : 'block';
+      playIcon.style.display = userManuallyPaused ? 'block' : 'none';
+    }
+    if (statusTextEl) {
+      statusTextEl.textContent = userManuallyPaused ? 'Auto-slide paused · Click to resume' : 'Auto-sliding · Hover or drag to pause';
+    }
+    if (!userManuallyPaused) {
+      progressStartTime = performance.now() - progressElapsed;
+    }
+  });
+}
+
+// Progress Bar & Auto-sliding logic
+function startProgressTimer() {
+  stopProgressTimer();
+  progressStartTime = performance.now() - progressElapsed;
+
+  function updateProgress(now) {
+    if (isPaused || userManuallyPaused) {
+      progressAnimationId = requestAnimationFrame(updateProgress);
+      return;
+    }
+    const elapsed = now - progressStartTime;
+    progressElapsed = elapsed;
+    const pct = Math.min(100, (elapsed / SLIDE_DURATION) * 100);
+    if (progressFillEl) {
+      progressFillEl.style.width = pct + '%';
+    }
+    if (elapsed >= SLIDE_DURATION) {
+      progressElapsed = 0;
+      progressStartTime = now;
+      nextSlide();
+    } else {
+      progressAnimationId = requestAnimationFrame(updateProgress);
+    }
+  }
+  progressAnimationId = requestAnimationFrame(updateProgress);
+}
+
+function stopProgressTimer() {
+  if (progressAnimationId) {
+    cancelAnimationFrame(progressAnimationId);
+    progressAnimationId = null;
+  }
+}
+
+function resetProgressTimer() {
+  progressElapsed = 0;
+  progressStartTime = performance.now();
+  if (progressFillEl) progressFillEl.style.width = '0%';
+  startProgressTimer();
+}
+
+// Pause on hover or focus
+if (sliderContainer) {
+  sliderContainer.addEventListener('mouseenter', () => {
+    if (!userManuallyPaused) {
+      isPaused = true;
+      if (statusTextEl) statusTextEl.textContent = 'Paused · Resume on leave';
+    }
+  });
+  sliderContainer.addEventListener('mouseleave', () => {
+    if (!userManuallyPaused) {
+      isPaused = false;
+      progressStartTime = performance.now() - progressElapsed;
+      if (statusTextEl) statusTextEl.textContent = 'Auto-sliding · Hover or drag to pause';
+    }
+  });
+
+  // Touch & Pointer Real-Time Dragging with Angle Detection & Flick Velocity
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let currentY = 0;
+  let startTime = 0;
+  let isDragging = false;
+  let hasDragged = false;
+  let dragDirection = null;
+  let baseOffset = 0;
+
+  sliderContainer.addEventListener('pointerdown', e => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (e.target.closest('a, button, .slider-side-arrow')) return;
+    isDragging = true;
+    hasDragged = false;
+    dragDirection = null;
+    startX = e.clientX;
+    startY = e.clientY;
+    currentX = e.clientX;
+    currentY = e.clientY;
+    startTime = performance.now();
+    baseOffset = getTargetOffset(trackIndex);
+    isPaused = true;
+  });
+
+  addEventListener('pointermove', e => {
+    if (!isDragging) return;
+    currentX = e.clientX;
+    currentY = e.clientY;
+    const diffX = currentX - startX;
+    const diffY = currentY - startY;
+
+    if (!dragDirection) {
+      if (Math.abs(diffX) > 8 || Math.abs(diffY) > 8) {
+        if (Math.abs(diffY) > Math.abs(diffX)) {
+          // Vertical scroll: release pointer lock so page scrolls freely on mobile
+          dragDirection = 'vertical';
+          isDragging = false;
+          return;
+        } else {
+          // Horizontal drag: engage slider track
+          dragDirection = 'horizontal';
+          hasDragged = true;
+          pContainer.style.transition = 'none';
+          sliderContainer.classList.add('is-dragging');
+        }
+      }
+    }
+
+    if (dragDirection === 'horizontal') {
+      const currentDragOffset = baseOffset - diffX;
+      pContainer.style.transform = `translate3d(-${currentDragOffset}px, 0, 0)`;
+    }
+  });
+
+  const handlePointerEnd = () => {
+    if (!isDragging && dragDirection !== 'horizontal') return;
+    isDragging = false;
+    sliderContainer.classList.remove('is-dragging');
+    pContainer.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+    
+    if (!userManuallyPaused) {
+      isPaused = false;
+      progressStartTime = performance.now() - progressElapsed;
+    }
+
+    if (dragDirection === 'horizontal') {
+      const diffX = currentX - startX;
+      const duration = performance.now() - startTime;
+      const velocity = Math.abs(diffX) / Math.max(duration, 1);
+
+      if (Math.abs(diffX) > 55 || velocity > 0.32) {
+        if (diffX < 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+      } else {
+        updateTrackPosition(true);
+      }
+    }
+    dragDirection = null;
+  };
+
+  addEventListener('pointerup', handlePointerEnd);
+  addEventListener('pointercancel', handlePointerEnd);
+
+  // Prevent link navigation if drag occurred
+  sliderContainer.addEventListener('click', e => {
+    if (hasDragged) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  // Keyboard Navigation
+  sliderContainer.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') {
+      nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      prevSlide();
+    }
+  });
+}
+
+// Window resize responsiveness
+let resizeTimeout;
+addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    updateTrackPosition(false);
+  }, 80);
+});
+
+// Initialize position and start auto-sliding
+setTimeout(() => {
+  updateTrackPosition(false);
+  startProgressTimer();
+}, 60);
 
 const curYr = new Date().getFullYear();
 const yrEl = $('#yr');
@@ -1722,7 +2453,7 @@ if (matchMedia('(hover:hover) and (pointer:fine)').matches && !matchMedia('(pref
     requestAnimationFrame(loop);
   })();
 
-  $$('.btn, .nav-toggle, .drawer-close, .mob-btn, .frame-socials a').forEach(el => {
+  $$('.btn, .nav-toggle, .drawer-close, .mob-btn, .frame-socials a, .slider-btn, .slider-side-arrow').forEach(el => {
     el.addEventListener('mousemove', e => {
       const r = el.getBoundingClientRect();
       el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .18}px, ${(e.clientY - r.top - r.height / 2) * .28}px)`;
